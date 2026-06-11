@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#071832">
+<title>Habilidades Médicas — Amhemed</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #071832;
+    --card:    #0C2347;
+    --card2:   #0F2A57;
+    --border:  rgba(255,255,255,0.08);
+    --blue:    #1A5BB8;
+    --teal:    #00A6A0;
+    --teal-d:  rgba(0,166,160,0.12);
+    --t1:      #EDF2FF;
+    --t2:      rgba(237,242,255,0.55);
+    --t3:      rgba(237,242,255,0.28);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--t1);
+    min-height: 100vh;
+    padding: 0 0 120px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── PROGRESS BAR ─── */
+  #progressBar {
+    position: fixed; top: 0; left: 0; z-index: 100;
+    height: 3px; width: 0%;
+    background: linear-gradient(90deg, var(--blue), var(--teal));
+    transition: width 0.3s;
+  }
+
+  /* ─── STEP INDICATOR ─── */
+  .steps {
+    display: flex; gap: 0;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 90;
+  }
+
+  .step {
+    flex: 1; padding: 14px 8px 12px;
+    text-align: center; cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--t3);
+  }
+
+  .step.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .step.done   { color: var(--t2); }
+
+  .step-num {
+    display: block;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    margin: 0 auto 5px;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .step.active .step-num { background: var(--teal); color: #071832; }
+  .step.done   .step-num { background: rgba(0,166,160,0.2); color: var(--teal); }
+
+  /* ─── SCREEN ─── */
+  .screen { display: none; padding: 20px 16px 0; }
+  .screen.active { display: block; }
+
+  /* ─── SECTION HEADER ─── */
+  .section-hd {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 14px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .section-hd::after {
+    content: ''; position: absolute; bottom: -1px; left: 0;
+    width: 32px; height: 1.5px;
+    background: linear-gradient(90deg, var(--blue), var(--teal));
+  }
+
+  .section-num { font-size: 8px; font-weight: 800; color: var(--teal); opacity: 0.7; letter-spacing: 0.1em; }
+  .section-ttl { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t2); }
+
+  /* ─── CARD BLOCK ─── */
+  .blk {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .blk-stripe { height: 3px; background: linear-gradient(90deg, #0C3574, #1A5BB8, #00A6A0); }
+
+  .blk-body { padding: 20px 18px; }
+
+  /* ─── SCREEN 1: IDENTIFICAÇÃO ─── */
+  .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+
+  .logo-sq {
+    width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+    background: linear-gradient(135deg, #1A5BB8, #00A6A0);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .logo-sq svg { width: 26px; height: 26px; }
+
+  .logo-name { font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+  .logo-name span { color: var(--teal); }
+  .logo-sub  { font-size: 8px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t3); margin-top: 2px; }
+
+  .field { margin-bottom: 16px; }
+  .field-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; display: block; }
+
+  .field input, .field textarea, .field select {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 2px solid rgba(0,166,160,0.45);
+    border-radius: 8px 8px 0 0;
+    padding: 13px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px; font-weight: 600;
+    color: var(--t1); outline: none;
+    caret-color: var(--teal);
+    -webkit-appearance: none;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .field input:focus, .field textarea:focus {
+    background: rgba(0,166,160,0.08);
+    border-bottom-color: var(--teal);
+  }
+
+  .field input::placeholder, .field textarea::placeholder { color: var(--t3); font-weight: 400; font-size: 14px; font-style: italic; }
+  .field textarea { min-height: 100px; resize: vertical; line-height: 1.7; font-size: 14px; }
+
+  .ans-row { display: flex; justify-content: space-between; align-items: center; margin-top: -4px; margin-bottom: 4px; }
+  .ans-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; }
+
+  /* ─── SCREEN 2: HABILIDADES ─── */
+  .sub-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--teal); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,166,160,0.15); margin-top: 16px; }
+  .sub-lbl:first-child { margin-top: 0; }
+
+  .item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 12px; border-radius: 9px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid transparent;
+    margin-bottom: 6px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.14s;
+    gap: 10px;
+  }
+
+  .item:active { background: rgba(0,166,160,0.1); }
+  .item.on { background: rgba(0,166,160,0.1); border-color: rgba(0,166,160,0.28); }
+
+  .item-lbl { font-size: 13px; font-weight: 400; color: var(--t1); line-height: 1.35; flex: 1; }
+  .item.on .item-lbl { font-weight: 500; }
+
+  .cb {
+    width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.14s;
+  }
+  .cb.off { background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.14); }
+  .cb.on  { background: var(--teal); }
+  .cb.on svg { display: block; }
+  .cb.off svg { display: none; }
+  .cb svg { width: 13px; height: 13px; stroke: white; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ─── SCREEN 3: RELATÓRIO ─── */
+  .doctor-block {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px;
+    background: var(--teal-d);
+    border: 1px solid rgba(0,166,160,0.22);
+    border-radius: 10px; margin-bottom: 18px;
+  }
+
+  .db-lbl { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 3px; }
+  .db-val { font-size: 16px; font-weight: 700; color: var(--t1); }
+
+  .status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+
+  .s-pill {
+    padding: 10px 4px; border-radius: 10px; text-align: center;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    border: 1.5px solid var(--border);
+    color: var(--t2); background: rgba(255,255,255,0.04);
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+
+  .s-pill .s-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin: 0 auto 5px; opacity: 0.6; }
+  #pill-approved.sel { background: rgba(0,180,100,0.15); border-color: #00B464; color: #00D47A; }
+  #pill-reject.sel   { background: rgba(220,50,50,0.15);  border-color: #DC3232; color: #FF6060; }
+  #pill-pending.sel  { background: rgba(245,190,0,0.12);  border-color: #F5BE00; color: #FFD740; }
+
+  /* ─── NAV BUTTONS ─── */
+  .nav { display: flex; gap: 10px; padding: 16px; }
+
+  .btn {
+    flex: 1; padding: 16px;
+    border: none; border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-back {
+    background: rgba(255,255,255,0.07);
+    color: var(--t2);
+    flex: 0 0 80px;
+  }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    color: white;
+    box-shadow: 0 4px 20px rgba(0,166,160,0.3);
+  }
+
+  .btn-generate {
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    color: white;
+    box-shadow: 0 6px 24px rgba(0,166,160,0.35);
+    font-size: 15px;
+  }
+
+  /* ─── COUNTER BADGE ─── */
+  .counter {
+    text-align: center; margin: 12px 0 4px;
+    font-size: 11px; color: var(--t3); font-weight: 500;
+  }
+
+  .counter span { color: var(--teal); font-weight: 700; }
+
+  /* ─── SIGN LINES ─── */
+  .sign-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  .sign-box { }
+  .sign-lbl { font-size: 8.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
+  .sign-line { height: 44px; border-bottom: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 6px 6px 0 0; }
+
+  /* ─── SECTION DIVIDER ─── */
+  .sec-div { margin: 20px 0 14px; }
+</style>
+</head>
+<body>
+
+<div id="progressBar"></div>
+
+<!-- STEP TABS -->
+<div class="steps">
+  <div class="step active" id="tab-1" onclick="goTo(1)">
+    <span class="step-num">1</span>Médico
+  </div>
+  <div class="step" id="tab-2" onclick="goTo(2)">
+    <span class="step-num">2</span>Habilidades
+  </div>
+  <div class="step" id="tab-3" onclick="goTo(3)">
+    <span class="step-num">3</span>Relatório
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     SCREEN 1 — IDENTIFICAÇÃO
+════════════════════════════ -->
+<div class="screen active" id="screen-1">
+  <div class="blk" style="margin-top:20px;">
+    <div class="blk-stripe"></div>
+    <div class="blk-body">
+      <div class="logo-row">
+        <div class="logo-sq">
+          <svg viewBox="0 0 26 26" fill="none">
+            <path d="M4 18 Q9 11 13 14 Q17 17 22 10" stroke="#00A6A0" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M4 13 Q9 6 13 9 Q17 12 22 5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+            <rect x="11" y="2" width="4" height="8" rx="2" fill="white" opacity="0.9"/>
+            <rect x="8" y="5" width="10" height="3.2" rx="1.6" fill="white" opacity="0.9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-name">amhe<span>med</span></div>
+          <div class="logo-sub">Hospital &amp; Planos de Saúde</div>
+        </div>
+      </div>
+
+      <div class="ans-row">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--teal);">Habilidades Médicas</div>
+        <div class="ans-badge">ANS 42173-1</div>
+      </div>
+
+      <div style="height:20px;"></div>
+
+      <div class="field">
+        <label class="field-lbl">Nome do Médico(a)</label>
+        <input id="inputNome" type="text" placeholder="Nome completo" autocomplete="name" oninput="sync()"/>
+      </div>
+
+      <div class="field">
+        <label class="field-lbl">CRM</label>
+        <input id="inputCRM" type="text" placeholder="000.000" autocomplete="off" oninput="sync()"/>
+      </div>
+
+      <div class="field">
+        <label class="field-lbl">Especialidade (opcional)</label>
+        <input id="inputEsp" type="text" placeholder="Ex: Radiologia, Medicina Diagnóstica" autocomplete="off"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-next" onclick="goTo(2)">Próximo — Habilidades →</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════
+     SCREEN 2 — HABILIDADES
+════════════════════════════ -->
+<div class="screen" id="screen-2">
+
+  <div class="counter">Total marcado: <span id="countBadge">0</span> habilidades</div>
+
+  <!-- USG GERAL -->
+  <div class="blk">
+    <div class="blk-stripe"></div>
+    <div class="blk-body">
+      <div class="section-hd"><span class="section-num">01</span><span class="section-ttl">Ultrassonografia Geral</span></div>
+      <div id="s1">
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Abdome Total / Hipocondrio / Retroperitônio</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Abdome Superior / Suprarrenais</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Aparelho Urinário</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Próstata Via Abdominal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Próstata Via Transretal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Pélvica Ginecológica</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Pélvica Transvaginal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Tireoide</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Região Cervical / Gl. Salivares / Parótidas</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Mamas</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Partes Moles / Axilas</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Bolsa Escrotal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Transfontanela</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Pênis</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Região Inguinal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Parede Abdominal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Tórax</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARTICULAÇÕES -->
+  <div class="blk">
+    <div class="blk-stripe"></div>
+    <div class="blk-body">
+      <div class="section-hd"><span class="section-num">02</span><span class="section-ttl">Articulações</span></div>
+      <div id="s2">
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Ombro</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Braço / Antebraço</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Cotovelo</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Punho</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Mão / Dedo</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Quadril Adulto</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Quadril Infantil</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Coxa</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Joelho</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Perna (Panturrilha)</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Tornozelo / Calcâneo</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Pé</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USG DERMATOLÓGICA -->
+  <div class="blk">
+    <div class="blk-stripe"></div>
+    <div class="blk-body">
+      <div class="section-hd"><span class="section-num">03</span><span class="section-ttl">USG Dermatológica</span></div>
+      <div id="s3">
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Lesões de Pele — Alta Frequência (15–22 MHz)</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Nódulos Cutâneos e Subcutâneos</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Lipomas / Cistos Epidérmicos</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Fístulas e Trajetos Sinuosos</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Avaliação de Cicatrizes / Queloides</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Corpo Estranho Subcutâneo</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Melanoma / Estadiamento Local</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Medida de Espessura Cutânea</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Ungual (Unhas — Patologias)</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Guia para Procedimentos Dermatológicos</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDICINA FETAL -->
+  <div class="blk">
+    <div class="blk-stripe"></div>
+    <div class="blk-body">
+      <div class="section-hd"><span class="section-num">04</span><span class="section-ttl">Medicina Fetal</span></div>
+      <div id="s4">
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Obstétrico</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Morfológico</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Doppler Colorido / Obstétrico</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Obstétrico 3D / 4D</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOPPLER -->
+  <div class="blk">
+    <div class="blk-stripe"></div>
+    <div class="blk-body">
+      <div class="section-hd"><span class="section-num">05</span><span class="section-ttl">Doppler Colorido</span></div>
+      <div id="s5">
+        <div class="sub-lbl">Medicina Interna</div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Tireoide</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Cervical</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Partes Moles</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Partes Moles — Dermatológico</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Pélvico</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Transvaginal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Escroto</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Próstata Via Abdominal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Próstata Via Transretal</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Porta / Fígado (Hepático)</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Renal (Veias e Artérias)</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Mamas</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Pênis sem Injeção de Papaverina</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="sub-lbl" style="margin-top:16px;">Periférico</div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Carótida / Vertebrais</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Aorta Abdominal / Artérias Ilíacas</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Veia Cava Inferior / Veias Ilíacas</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Arterial MMSS</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Arterial MMII</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Venoso MMSS</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Venoso MMII e MMSS — Pesquisa de TVP</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Venoso MMII — Mapeamento de Varizes</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+        <div class="item" onclick="tog(this)"><span class="item-lbl">Arterial MMII (periférico)</span><div class="cb off"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-back" onclick="goTo(1)">←</button>
+    <button class="btn btn-next" onclick="goTo(3)">Próximo — Relatório →</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════
+     SCREEN 3 — RELATÓRIO
+════════════════════════════ -->
+<div class="screen" id="screen-3">
+
+  <div class="blk" style="margin-top:20px;">
+    <div class="blk-stripe"></div>
+    <div class="blk-body">
+
+      <div class="doctor-block">
+        <div>
+          <div class="db-lbl">Médico(a)</div>
+          <div class="db-val" id="rNome">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="db-lbl">CRM</div>
+          <div class="db-val" id="rCRM">—</div>
+        </div>
+      </div>
+
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Status de Credenciamento</div>
+      <div class="status-grid">
+        <div class="s-pill sel" id="pill-approved" onclick="setStatus('approved')">
+          <div class="s-dot"></div>Credenciado
+        </div>
+        <div class="s-pill" id="pill-reject" onclick="setStatus('reject')">
+          <div class="s-dot"></div>Não cred.
+        </div>
+        <div class="s-pill" id="pill-pending" onclick="setStatus('pending')">
+          <div class="s-dot"></div>Em análise
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label class="field-lbl">Data da Avaliação</label>
+        <input id="inputData" type="date" autocomplete="off"/>
+      </div>
+
+      <div class="field">
+        <label class="field-lbl">Avaliador Responsável</label>
+        <input id="inputAval" type="text" placeholder="Nome do avaliador" autocomplete="off"/>
+      </div>
+
+      <div class="field">
+        <label class="field-lbl">Unidade / Setor</label>
+        <input id="inputUnit" type="text" placeholder="Ex: Radiologia" autocomplete="off"/>
+      </div>
+
+      <div class="field">
+        <label class="field-lbl">Observações</label>
+        <textarea id="inputObs" placeholder="Observações da avaliação clínica..."></textarea>
+      </div>
+
+      <div class="sign-row">
+        <div class="sign-box">
+          <div class="sign-lbl">Assinatura Médico(a)</div>
+          <div class="sign-line"></div>
+        </div>
+        <div class="sign-box">
+          <div class="sign-lbl">Aprovação Diretor</div>
+          <div class="sign-line"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-back" onclick="goTo(2)">←</button>
+    <button class="btn btn-generate" onclick="gerarRelatorio()">✓ Finalizar &amp; Salvar PDF</button>
+  </div>
+</div>
+
+<script>
+  let cur = 1;
+
+  function goTo(n) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.step').forEach(s => { s.classList.remove('active'); s.classList.remove('done'); });
+    document.getElementById('screen-'+n).classList.add('active');
+    document.getElementById('tab-'+n).classList.add('active');
+    for (let i = 1; i < n; i++) document.getElementById('tab-'+i).classList.add('done');
+    cur = n;
+    document.getElementById('progressBar').style.width = (n/3*100)+'%';
+    window.scrollTo({top:0, behavior:'smooth'});
+    if (n === 3) updateReport();
+  }
+
+  function tog(el) {
+    const cb = el.querySelector('.cb');
+    const on = cb.classList.contains('off');
+    cb.classList.toggle('off', !on);
+    cb.classList.toggle('on', on);
+    el.classList.toggle('on', on);
+    updateCount();
+  }
+
+  function updateCount() {
+    const n = document.querySelectorAll('.cb.on').length;
+    document.getElementById('countBadge').textContent = n;
+  }
+
+  function sync() {
+    const n = document.getElementById('inputNome').value.trim();
+    const c = document.getElementById('inputCRM').value.trim();
+    const rn = document.getElementById('rNome');
+    const rc = document.getElementById('rCRM');
+    if (rn) rn.textContent = n || '—';
+    if (rc) rc.textContent = c || '—';
+  }
+
+  function updateReport() {
+    sync();
+  }
+
+  function setStatus(t) {
+    ['approved','reject','pending'].forEach(x => document.getElementById('pill-'+x).classList.remove('sel'));
+    document.getElementById('pill-'+t).classList.add('sel');
+  }
+
+  function getStatus() {
+    if (document.getElementById('pill-approved').classList.contains('sel')) return {label:'Credenciado', color:'#00D47A', bg:'rgba(0,180,100,0.15)', border:'#00B464'};
+    if (document.getElementById('pill-reject').classList.contains('sel'))   return {label:'Não credenciado', color:'#FF6060', bg:'rgba(220,50,50,0.15)', border:'#DC3232'};
+    return {label:'Em análise', color:'#FFD740', bg:'rgba(245,190,0,0.12)', border:'#F5BE00'};
+  }
+
+  function getChecked() {
+    const secs = [
+      {id:'s1', title:'USG Geral'},
+      {id:'s2', title:'Articulações'},
+      {id:'s3', title:'USG Dermatológica'},
+      {id:'s4', title:'Medicina Fetal'},
+      {id:'s5', title:'Doppler Colorido'},
+    ];
+    return secs.map(s => {
+      const items = [];
+      document.querySelectorAll('#'+s.id+' .item.on .item-lbl').forEach(e => items.push(e.textContent.trim()));
+      return {title: s.title, items};
+    }).filter(s => s.items.length > 0);
+  }
+
+  function fmt(d) {
+    if (!d) return '—';
+    const [y,m,dd] = d.split('-');
+    return `${dd}/${m}/${y}`;
+  }
+
+  function gerarRelatorio() {
+    const nome  = document.getElementById('inputNome').value.trim() || '—';
+    const crm   = document.getElementById('inputCRM').value.trim() || '—';
+    const esp   = document.getElementById('inputEsp').value.trim();
+    const data  = fmt(document.getElementById('inputData').value);
+    const aval  = document.getElementById('inputAval').value.trim() || '—';
+    const unit  = document.getElementById('inputUnit').value.trim() || '—';
+    const obs   = document.getElementById('inputObs').value.trim() || '—';
+    const st    = getStatus();
+    const secs  = getChecked();
+    const total = secs.reduce((a,s)=>a+s.items.length,0);
+    const now   = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    const secsHTML = secs.map(s=>`
+      <div style="margin-bottom:18px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#00A6A0;padding-bottom:8px;border-bottom:1px solid rgba(0,166,160,0.2);margin-bottom:10px;">${s.title}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;">
+          ${s.items.map(i=>`<div style="display:flex;align-items:baseline;gap:7px;font-size:12px;color:#EDF2FF;padding:4px 0;"><span style="color:#00A6A0;font-weight:700;flex-shrink:0;">✓</span>${i}</div>`).join('')}
+        </div>
+      </div>`).join('');
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relatório — ${nome}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#071832;color:#EDF2FF;padding:32px 24px 48px;-webkit-print-color-adjust:exact;print-color-adjust:exact;max-width:600px;margin:0 auto;}
+.stripe{height:4px;background:linear-gradient(90deg,#0C3574,#1A5BB8,#00A6A0);border-radius:2px;margin-bottom:28px;}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.logo-sq{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1A5BB8,#00A6A0);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:white;flex-shrink:0;}
+.logo-name{font-size:20px;font-weight:800;color:white;letter-spacing:-0.4px;}
+.logo-name span{color:#00A6A0;}
+.logo-sub{font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(237,242,255,0.3);margin-top:2px;}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#00A6A0;margin-bottom:5px;}
+.doc-title{font-size:20px;font-weight:800;color:white;margin-bottom:24px;letter-spacing:-0.4px;}
+.doctor-bar{display:flex;justify-content:space-between;padding:14px 16px;background:rgba(0,166,160,0.1);border:1px solid rgba(0,166,160,0.25);border-radius:10px;margin-bottom:16px;}
+.d-lbl{font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#00A6A0;margin-bottom:3px;}
+.d-val{font-size:16px;font-weight:800;color:white;}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.meta-card{background:#0C2347;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:11px 13px;}
+.meta-lbl{font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(237,242,255,0.3);margin-bottom:3px;}
+.meta-val{font-size:13px;font-weight:600;color:#EDF2FF;}
+.status-bar{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:18px;background:${st.bg};color:${st.color};border:1.5px solid ${st.border};}
+.s-dot{width:8px;height:8px;border-radius:50%;background:${st.color};}
+.summary{font-size:11px;color:rgba(237,242,255,0.4);margin-bottom:20px;}
+.obs-block{background:#0C2347;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;margin:20px 0;}
+.obs-lbl{font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(237,242,255,0.3);margin-bottom:7px;}
+.obs-txt{font-size:12px;line-height:1.8;color:#EDF2FF;white-space:pre-wrap;}
+.sign-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px;}
+.sign-box{border-top:1.5px solid rgba(255,255,255,0.1);padding-top:10px;}
+.sign-lbl{font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(237,242,255,0.3);margin-bottom:3px;}
+.sign-space{height:36px;}
+.footer{margin-top:28px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.footer-txt{font-size:8.5px;color:rgba(237,242,255,0.22);}
+.print-btn{position:fixed;bottom:24px;right:20px;padding:14px 22px;background:linear-gradient(135deg,#1A5BB8,#00A6A0);color:white;border:none;border-radius:50px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 24px rgba(0,166,160,0.35);}
+@media print{.print-btn{display:none;}body{padding:20px;}@page{margin:0;size:A4;}}
+</style></head><body>
+<div class="stripe"></div>
+<div class="logo-row">
+  <div class="logo-sq">A</div>
+  <div><div class="logo-name">amhe<span>med</span></div><div class="logo-sub">Hospital &amp; Planos de Saúde · Sorocaba</div></div>
+</div>
+<div class="eyebrow">Documento Oficial · Serviço de Radiologia e Diagnóstico por Imagem</div>
+<div class="doc-title">Relatório de Credenciamento Médico</div>
+
+<div class="doctor-bar">
+  <div><div class="d-lbl">Médico(a)</div><div class="d-val">${nome}</div>${esp ? `<div style="font-size:11px;color:rgba(237,242,255,0.4);margin-top:3px;">${esp}</div>` : ''}</div>
+  <div style="text-align:right"><div class="d-lbl">CRM</div><div class="d-val">${crm}</div></div>
+</div>
+
+<div class="meta-grid">
+  <div class="meta-card"><div class="meta-lbl">Data</div><div class="meta-val">${data}</div></div>
+  <div class="meta-card"><div class="meta-lbl">Avaliador</div><div class="meta-val">${aval}</div></div>
+  <div class="meta-card" style="grid-column:1/-1"><div class="meta-lbl">Unidade / Setor</div><div class="meta-val">${unit}</div></div>
+</div>
+
+<div class="status-bar"><div class="s-dot"></div>${st.label}</div>
+<div class="summary">${total} habilidade${total!==1?'s':''} habilitada${total!==1?'s':''} em ${secs.length} categoria${secs.length!==1?'s':''}</div>
+
+${secsHTML}
+
+${obs!=='—'?`<div class="obs-block"><div class="obs-lbl">Observações</div><div class="obs-txt">${obs}</div></div>`:''}
+
+<div class="sign-row">
+  <div class="sign-box"><div class="sign-lbl">Assinatura do Médico(a)</div><div class="sign-space"></div></div>
+  <div class="sign-box"><div class="sign-lbl">Aprovação — Diretor Clínico</div><div class="sign-space"></div></div>
+</div>
+
+<div class="footer">
+  <div class="footer-txt">Hospital Amhemed · ANS Nº 42173-1</div>
+  <div class="footer-txt">Gerado em ${now}</div>
+</div>
+
+<button class="print-btn" onclick="window.print()">⬇ Salvar PDF</button>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`;
+
+    const win = window.open('','_blank');
+    if (win) { win.document.write(html); win.document.close(); }
+    else { alert('Permita pop-ups para este site e tente novamente.'); }
+  }
+</script>
+</body>
+</html>
